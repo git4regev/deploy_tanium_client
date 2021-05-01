@@ -1,0 +1,50 @@
+---
+- name: Deploy Tanium agent on Linux endpoints
+  hosts: linux_endpoints
+  gather_facts: false
+  var_files:
+    - deploy_config.yml
+
+  tasks:
+    - name: Create endpoint temporary directory
+      ansible.builtin.file:
+        path: {{ dst_linux_temp_directory }}
+        state: directory
+
+    - name: Copy and unzip Tanium agent rpm to endpoint
+      ansible.builtin.unarchive:
+        src: ./{{ tanium_linux_package }}
+        dest: {{ dst_linux_temp_directory }}
+
+    # This step is not required if using TaaS, as install.sh is already part of the .zip file
+    - name: Copy install script to endpoint
+      ansible.builtin.copy:
+        src: ./install.sh
+        dest: {{ dst_linux_temp_directory }}/install.sh
+      when:
+        - "is_taas == 'false'"
+
+    - name: Change mode of install.sh file
+      ansible.builtin.file:
+        path: {{ dst_linux_temp_directory }}/install.sh
+        mode: 0744
+
+    - name: Permit traffic in default zone on port 17472/tcp
+      ansible.posix.firewalld:
+        port: 17472/tcp
+        permanent: yes
+        state: enabled
+
+    - name: Permit traffic in default zone on port 17486/tcp if using TaaS
+      ansible.posix.firewalld:
+        port: 17472/tcp
+        permanent: yes
+        state: enabled
+      when:
+        - "is_taas == 'true'"
+
+    - name: Execute install.sh shell
+      ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
+      args:
+        chdir: {{ dst_linux_temp_directory }}
+
