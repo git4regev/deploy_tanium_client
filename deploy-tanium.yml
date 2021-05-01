@@ -1,15 +1,19 @@
 ---
 - name: Deploy Tanium agent on Linux endpoints
-  hosts: linux_endpoints
-  gather_facts: false
+  hosts: all
+  gather_facts: true
+  gather_subset:
+    - os_family
   var_files:
     - deploy_config.yml
 
   tasks:
-    - name: Create endpoint temporary directory
+    - name: Create Linux endpoint temporary directory
       ansible.builtin.file:
         path: {{ dst_linux_temp_directory }}
         state: directory
+      when:
+        - "ansible_facts.os_family == 'RedHat'"
 
     - name: Copy and unzip Tanium agent rpm to endpoint
       ansible.builtin.unarchive:
