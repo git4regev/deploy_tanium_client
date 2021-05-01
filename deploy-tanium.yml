@@ -8,20 +8,66 @@
     - deploy_config.yml
 
   tasks:
-    - name: Create Linux endpoint temporary directory
-      ansible.builtin.file:
-        path: {{ dst_linux_temp_directory }}
-        state: directory
+    - name: Set value of OS family to Linux
+      set_fact:
+        os_family: "Linux"
       when:
         - "ansible_facts.os_family == 'RedHat'"
 
+    - name: Set value of OS family to Windows
+      set_fact:
+        os_family: "Windows"
+      when:
+        - "ansible_facts.os_family == 'Windows'"
+
+    - name: Set value of OS family to MacOS
+      set_fact:
+        os_family: "MacOS"
+      when:
+        - "ansible_facts.os_family == 'MacOS'"
+  
+    - name: Set value for temporary folder (Linux/Mac)
+      set_fact:
+        dst_temp_directory: "{{ dst_linux_temp_directory }}"
+      when:
+        - "os_family == 'Linux'"
+
+    - name: Set value for temporary folder (Windows)
+      set_fact:
+        dst_temp_directory: "{{ dst_win_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Set value for install package (Linux)
+      set_fact:
+        tanium_install_package: "{{ tanium_linux_package }}"
+      when:
+        - "os_family == 'Linux'"
+
+    - name: Set value for install package (Windows)
+      set_fact:
+        tanium_install_package: "{{ tanium_win_package }}"
+      when:
+        - "os_family == 'Windows'"
+        
+    - name: Set value for install package (MacOS)
+      set_fact:
+        tanium_install_package: "{{ tanium_mac_package }}"
+      when:
+        - "os_family == 'MacOS'"
+
+    - name: Create endpoint temporary directory
+      ansible.builtin.file:
+        path: {{ dst_temp_directory }}
+        state: directory
+
     - name: Copy and unzip Tanium agent rpm to endpoint
       ansible.builtin.unarchive:
-        src: ./{{ tanium_linux_package }}
-        dest: {{ dst_linux_temp_directory }}
+        src: ./{{ tanium_install_package }}
+        dest: {{ dst_temp_directory }}
 
     # This step is not required if using TaaS, as install.sh is already part of the .zip file
-    - name: Copy install script to endpoint
+    - name: Copy Linux install script to endpoint
       ansible.builtin.copy:
         src: ./install.sh
         dest: {{ dst_linux_temp_directory }}/install.sh
@@ -41,7 +87,7 @@
 
     - name: Permit traffic in default zone on port 17486/tcp if using TaaS
       ansible.posix.firewalld:
-        port: 17472/tcp
+        port: 17486/tcp
         permanent: yes
         state: enabled
       when:
