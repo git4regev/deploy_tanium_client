@@ -230,5 +230,10 @@
       when:
         - "os_family == 'Linux' or os_family == 'MacOSX'"
 
-
+    - name: Execute install.bat shell (Windows)
+      win_shell: "{{ dst_temp_directory }}\\install.bat"
+      args:
+        chdir: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
 
