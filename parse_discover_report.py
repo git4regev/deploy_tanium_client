@@ -58,7 +58,7 @@ for item in linux_endpoints:
 output.write('\n')
 output.write("[windows_endpoints]\n")
 for item in windows_endpoints:
-    output.write(item + '\n')
+    output.write(item + '\tansible_connection=winrm\tansible_winrm_server_cert_vlidation=ignore\tansible_port=5986\tansible_user=Administrator\n')
 output.write('\n')
 output.write("[mac_endpoints]\n")
 for item in mac_endpoints:
