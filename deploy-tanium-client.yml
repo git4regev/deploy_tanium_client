@@ -144,6 +144,30 @@
         - "ansible_facts.distribution == 'CentOS'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
+    - name: Permit in traffic on port 17472/tcp for Windows
+      community.windows.win_firewall_rule:
+        name: Allow incoming traffic on port 17472
+        localport: 17472
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Permit out traffic on port 17472/tcp for Windows
+      community.windows.win_firewall_rule:
+        name: Allow outgoing traffic on port 17472
+        localport: 17472
+        action: allow
+        direction: out
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "os_family == 'Windows'"
+
     - name: Permit traffic in default zone on port 17486/tcp if using TaaS for CentOS 5.x and 6.x
       ansible.builtin.iptables:
         chain: INPUT
@@ -151,7 +175,7 @@
         jump: ACCEPT
         protocol: tcp
       when: 
-        - "is_taas == 'true'"
+        - "is_taas == true"
         - "ansible_facts.distribution == 'CentOS'"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
 
@@ -161,9 +185,35 @@
         permanent: yes
         state: enabled
       when:
-        - "is_taas == 'true'"
+        - "is_taas == true"
         - "ansible_facts.distribution == 'CentOS'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+
+    - name: Permit in traffic on port 17486/tcp for Windows
+      community.windows.win_firewall_rule:
+        name: Allow incoming traffic on port 17486
+        localport: 17486
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "is_taas == true"
+        - "os_family == 'Windows'"
+
+    - name: Permit out traffic on port 17486/tcp for Windows
+      community.windows.win_firewall_rule:
+        name: Allow outgoing traffic on port 17486
+        localport: 17486
+        action: allow
+        direction: out
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "is_taas == true"
+        - "os_family == 'Windows'"
 
     - name: Execute install.sh shell (Linux/Mac)
       ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
