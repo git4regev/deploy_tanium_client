@@ -94,8 +94,8 @@
     # This step is not required if using TaaS, as install.sh is already part of the .zip file
     - name: Copy install script to endpoint (Linux)
       ansible.builtin.copy:
-        src: ./install.sh
-        dest: {{ dst_temp_directory }}/install.sh
+        src: "./install.sh"
+        dest: "{{ dst_temp_directory }}/install.sh"
       when:
         - "is_taas == false"
         - "os_family == 'Linux'"
@@ -103,8 +103,8 @@
     # This step is not required if using TaaS, as install.sh is already part of the .zip file
     - name: Copy install script to endpoint (Mac)
       ansible.builtin.copy:
-        src: ./mac_install.sh
-        dest: {{ dst_temp_directory }}/install.sh
+        src: "./mac_install.sh"
+        dest: "{{ dst_temp_directory }}/install.sh"
       when:
         - "is_taas == false"
         - "os_family == 'MacOSX'"
@@ -112,15 +112,15 @@
     # This step is not required if using TaaS, as install.bat is already part of the .zip file
     - name: Copy install script to endpoing (Windows)
       ansible.builtin.copy:
-        src: ./install.bat
-        dest: {{ dst_temp_directory }}/install.bat
+        src: "./install.bat"
+        dest: "{{ dst_temp_directory }}/install.bat"
       when:
         - "is_taas == false"
         - "os_family == 'Windows'"
 
     - name: Change mode of install.sh file (Linux/Mac)
       ansible.builtin.file:
-        path: {{ dst_temp_directory }}/install.sh
+        path: "{{ dst_temp_directory }}/install.sh"
         mode: 0744
       when:
         - "os_family == 'Linux' or os_family == 'MacOSX'"
