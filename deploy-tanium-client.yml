@@ -8,19 +8,19 @@
     - deploy_config.yml
 
   tasks:
-    - name: Set value of OS family to Linux
+    - name: Set value of OS family for Linux endpoints
       set_fact:
         os_family: "Linux"
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
 
-    - name: Set value of OS family to Windows
+    - name: Set value of OS family for Windows endpoints
       set_fact:
         os_family: "Windows"
       when:
         - "ansible_facts.os_family == 'Windows'"
 
-    - name: Set value of OS family to MacOS
+    - name: Set value of OS family for MacOS endpoints
       set_fact:
         os_family: "MacOSX"
       when:
@@ -56,44 +56,69 @@
       when:
         - "os_family == 'MacOSX'"
 
-    - name: Create endpoint temporary directory
+    - name: Create endpoint temporary directory (Linux/Mac)
       ansible.builtin.file:
-        path: {{ dst_temp_directory }}
+        path: "{{ dst_temp_directory }}"
         state: directory
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+        
+    - name: Create endpoint temporary directory (Windows)
+      ansible.windows.win_file:
+        path: "{{ dst_temp_directory }}"
+        state: directory
+      when:
+        - "os_family == 'Windows'"
 
-    - name: Copy and unzip Tanium agent rpm to endpoint
+    - name: Copy and unzip Tanium Client rpm to endpoint (Linux/Mac)
       ansible.builtin.unarchive:
-        src: ./{{ tanium_install_package }}
-        dest: {{ dst_temp_directory }}
+        src: "./{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+        
+    - name: Copy Tanium Client to endpoint (Windows)
+      ansible.windows.win_copy:
+        src: "./{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Unzip Tanium Client on endpoint (Windows)
+      community.windows.win_unzip:
+        src: "{{ dst_temp_directory }}\\{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
 
     # This step is not required if using TaaS, as install.sh is already part of the .zip file
-    - name: Copy Linux install script to endpoint
+    - name: Copy install script to endpoint (Linux)
       ansible.builtin.copy:
         src: ./install.sh
         dest: {{ dst_temp_directory }}/install.sh
       when:
-        - "is_taas == 'false'"
+        - "is_taas == false"
         - "os_family == 'Linux'"
 
     # This step is not required if using TaaS, as install.sh is already part of the .zip file
-    - name: Copy Mac install script to endpoint
+    - name: Copy install script to endpoint (Mac)
       ansible.builtin.copy:
         src: ./mac_install.sh
         dest: {{ dst_temp_directory }}/install.sh
       when:
-        - "is_taas == 'false'"
+        - "is_taas == false"
         - "os_family == 'MacOSX'"
 
     # This step is not required if using TaaS, as install.bat is already part of the .zip file
-    - name: Copy Windows install script to endpoing
+    - name: Copy install script to endpoing (Windows)
       ansible.builtin.copy:
         src: ./install.bat
         dest: {{ dst_temp_directory }}/install.bat
       when:
-        - "is_taas == 'false'"
+        - "is_taas == false"
         - "os_family == 'Windows'"
 
-    - name: Change mode of install.sh file
+    - name: Change mode of install.sh file (Linux/Mac)
       ansible.builtin.file:
         path: {{ dst_temp_directory }}/install.sh
         mode: 0744
@@ -140,7 +165,7 @@
         - "ansible_facts.distribution == 'CentOS'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
-    - name: Execute install.sh shell
+    - name: Execute install.sh shell (Linux/Mac)
       ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
       args:
         chdir: {{ dst_temp_directory }}
