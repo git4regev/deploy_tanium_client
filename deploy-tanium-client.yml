@@ -70,31 +70,82 @@
     - name: Copy Linux install script to endpoint
       ansible.builtin.copy:
         src: ./install.sh
-        dest: {{ dst_linux_temp_directory }}/install.sh
+        dest: {{ dst_temp_directory }}/install.sh
       when:
         - "is_taas == 'false'"
+        - "os_family == 'Linux'"
+
+    # This step is not required if using TaaS, as install.sh is already part of the .zip file
+    - name: Copy Mac install script to endpoint
+      ansible.builtin.copy:
+        src: ./mac_install.sh
+        dest: {{ dst_temp_directory }}/install.sh
+      when:
+        - "is_taas == 'false'"
+        - "os_family == 'MacOSX'"
+
+    # This step is not required if using TaaS, as install.bat is already part of the .zip file
+    - name: Copy Windows install script to endpoing
+      ansible.builtin.copy:
+        src: ./install.bat
+        dest: {{ dst_temp_directory }}/install.bat
+      when:
+        - "is_taas == 'false'"
+        - "os_family == 'Windows'"
 
     - name: Change mode of install.sh file
       ansible.builtin.file:
-        path: {{ dst_linux_temp_directory }}/install.sh
+        path: {{ dst_temp_directory }}/install.sh
         mode: 0744
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
 
-    - name: Permit traffic in default zone on port 17472/tcp
+    - name: Permit traffic in default zone on port 17472/tcp for CentOS 5.x and 6.x
+      ansible.builtin.iptables:
+        chain: INPUT
+        destination_port: 17472
+        jump: ACCEPT
+        protocol: tcp
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
+
+    - name: Permit traffic in default zone on port 17472/tcp for CentOS 7.x and 8.x
       ansible.posix.firewalld:
         port: 17472/tcp
         permanent: yes
         state: enabled
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
-    - name: Permit traffic in default zone on port 17486/tcp if using TaaS
+    - name: Permit traffic in default zone on port 17486/tcp if using TaaS for CentOS 5.x and 6.x
+      ansible.builtin.iptables:
+        chain: INPUT
+        destination_port: 17486
+        jump: ACCEPT
+        protocol: tcp
+      when: 
+        - "is_taas == 'true'"
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
+
+    - name: Permit traffic in default zone on port 17486/tcp if using TaaS for CentOS 7.x and 8.x
       ansible.posix.firewalld:
         port: 17486/tcp
         permanent: yes
         state: enabled
       when:
         - "is_taas == 'true'"
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
     - name: Execute install.sh shell
       ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
       args:
-        chdir: {{ dst_linux_temp_directory }}
+        chdir: {{ dst_temp_directory }}
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+
+
 
