@@ -4,7 +4,7 @@
   gather_facts: true
   gather_subset:
     - os_family
-  var_files:
+  vars_files:
     - deploy_config.yml
 
   tasks:
@@ -12,7 +12,7 @@
       set_fact:
         os_family: "Linux"
       when:
-        - "ansible_facts.os_family == 'RedHat'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
 
     - name: Set value of OS family to Windows
       set_fact:
@@ -22,15 +22,15 @@
 
     - name: Set value of OS family to MacOS
       set_fact:
-        os_family: "MacOS"
+        os_family: "MacOSX"
       when:
-        - "ansible_facts.os_family == 'MacOS'"
+        - "ansible_facts.distribution == 'MacOSX'"
   
     - name: Set value for temporary folder (Linux/Mac)
       set_fact:
         dst_temp_directory: "{{ dst_linux_temp_directory }}"
       when:
-        - "os_family == 'Linux'"
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
 
     - name: Set value for temporary folder (Windows)
       set_fact:
@@ -54,7 +54,7 @@
       set_fact:
         tanium_install_package: "{{ tanium_mac_package }}"
       when:
-        - "os_family == 'MacOS'"
+        - "os_family == 'MacOSX'"
 
     - name: Create endpoint temporary directory
       ansible.builtin.file:
