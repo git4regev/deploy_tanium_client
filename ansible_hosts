@@ -1,8 +1,8 @@
 [linux_endpoints]
-# host_name ansible_connection=ssh  ansible_user=root
+# host_name     ansible_connection=ssh     ansible_user=root
 
 [windows_endpoints]
-# host_name ansible_connection=winrm  ansible_winrm_server_cert_validation=ignore ansible_port=5986 ansible_user=Administrator
+# host_name     ansible_connection=winrm     ansible_winrm_server_cert_validation=ignore     ansible_port=5986     ansible_user=Administrator
 
 [mac_endpoints]
-# host_name ansible_connection=ssh  ansible_user=root
+# host_name     ansible_connection=ssh     ansible_user=root
