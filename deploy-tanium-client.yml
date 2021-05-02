@@ -189,7 +189,7 @@
         - "ansible_facts.distribution == 'CentOS'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
-    - name: Permit in traffic on port 17486/tcp for Windows
+    - name: Permit in traffic on port 17486/tcp if using TaaS for Windows
       community.windows.win_firewall_rule:
         name: Allow incoming traffic on port 17486
         localport: 17486
@@ -202,7 +202,7 @@
         - "is_taas == true"
         - "os_family == 'Windows'"
 
-    - name: Permit out traffic on port 17486/tcp for Windows
+    - name: Permit out traffic on port 17486/tcp if using TaaS for Windows
       community.windows.win_firewall_rule:
         name: Allow outgoing traffic on port 17486
         localport: 17486
