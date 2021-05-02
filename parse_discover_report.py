@@ -54,17 +54,17 @@ with open(report_file) as csv_file:
 output = open(output_file, "w")
 output.write("[linux_endpoints]\n")
 for item in linux_endpoints:
-    output.write(item + '\tansible_connection=ssh\tansible_user=root\n')
+    output.write(item + '     ansible_connection=ssh     ansible_user=root\n')
 output.write('\n')
 output.write("[windows_endpoints]\n")
 for item in windows_endpoints:
-    output.write(item + '\tansible_connection=winrm\tansible_winrm_server_cert_validation=ignore\tansible_port=5986\tansible_user=Administrator\n')
+    output.write(item + '     ansible_connection=winrm     ansible_winrm_server_cert_validation=ignore     ansible_port=5986     ansible_user=Administrator\n')
 output.write('\n')
 output.write("[mac_endpoints]\n")
 for item in mac_endpoints:
-    output.write(item + '\tansible_connection=ssh\tansible_user=root\n')
+    output.write(item + '     ansible_connection=ssh     ansible_user=root\n')
 output.write('\n')
 output.write("[linux/mac_endpoints]\n")
 for item in linux_mac_endpoints:
-    output.write(item + '\tansible_connection=ssh\tansible_user=root\n')
+    output.write(item + '     ansible_connection=ssh     ansible_user=root\n')
 output.write('\n')
