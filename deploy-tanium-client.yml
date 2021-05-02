@@ -215,6 +215,14 @@
         - "is_taas == true"
         - "os_family == 'Windows'"
 
+    - name: Reload firewalld service for Linux endpoints
+      systemd:
+        name: firewalld
+        state: reloaded
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+
     - name: Execute install.sh shell (Linux/Mac)
       ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
       args:
