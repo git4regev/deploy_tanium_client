@@ -1,5 +1,5 @@
-dst_linux_temp_directory: /tmp/Tanium          # Directory on endpoint where the agent rpm will be copied to
-dst_win_temp_directory: /some/dir
+dst_linux_temp_directory: /tmp/Tanium          # Directory on endpoint where the Tanium client rpm will be copied to
+dst_win_temp_directory: C:\Temp\Tanium         # Directory on endpoint where the Tanium client install will be copied to
 tanium_linux_package: linux-client-bundle.zip  # Name of Linux install package
 tanium_win_package: win-client-bundle.zip      # Name of Windows install package
 tanium_mac_package: mac-client-bundle.zip      # Name of Mac install package
