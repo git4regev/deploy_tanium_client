@@ -224,9 +224,9 @@
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
     - name: Execute install.sh shell (Linux/Mac)
-      ansible.builtin.shell: {{ dst_temp_directory }}/install.sh
+      ansible.builtin.shell: "{{ dst_temp_directory }}/install.sh"
       args:
-        chdir: {{ dst_temp_directory }}
+        chdir: "{{ dst_temp_directory }}"
       when:
         - "os_family == 'Linux' or os_family == 'MacOSX'"
 
