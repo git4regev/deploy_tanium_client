@@ -13,7 +13,7 @@ import os.path
 import csv
 
 ansible_file = 'ansible_hosts'
-known_hosts = '/root/.ssh/known_hosts'
+known_hosts = os.path.expanduser('~') + '/.ssh/known_hosts'
 ignore_line = False
 
 # Create known_hosts file if one does not already exists
