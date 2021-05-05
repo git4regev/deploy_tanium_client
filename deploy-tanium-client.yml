@@ -225,6 +225,7 @@
 
     - name: Execute install.sh shell (Linux/Mac)
       ansible.builtin.shell: "{{ dst_temp_directory }}/install.sh"
+      become: true
       args:
         chdir: "{{ dst_temp_directory }}"
       when:
