@@ -5,6 +5,10 @@
 # file ansible_hosts, and adds their SSH public keys to the known_hosts file so that
 # Ansible can establish an SSH connection to those hosts. This script ignore the hosts
 # under the [windows_endpoints] section
+# This is Python file used code taken from following sources:
+#    https://gist.github.com/Pristavkin/e3d6b909d0745656064c7525942ca7e3
+#    https://gist.github.com/batok/2352501
+#    https://29a.ch/2010/9/8/deploy-ssh-public-key-multiple-servers-python-paramiko
 
 #!/usr/bin/env python3
 import argparse
@@ -24,9 +28,6 @@ ansible_key = open(os.path.expanduser('~/.ssh/id_rsa.pub')).read()
 if not os.path.isfile(known_hosts):
     open(known_hosts, 'w+').close()
 
-# This is a Python implementation of ssh-keyscan utility. Code taken from https://gist.github.com/Pristavkin/e3d6b909d0745656064c7525942ca7e3
-# https://gist.github.com/batok/2352501
-# https://29a.ch/2010/9/8/deploy-ssh-public-key-multiple-servers-python-paramiko
 with open(ansible_file) as csv_file:
     print ("Reading content of {}...".format(ansible_file))
     csv_reader = csv.reader(csv_file, delimiter=' ')
