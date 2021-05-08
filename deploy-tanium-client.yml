@@ -1,0 +1,257 @@
+# This Ansible playbook deploys the Tanium client on Windwos, Linux, and Mac endpoints
+# The following distributions are supported by this playbook:
+# - CentOS 5.x ?
+# - CentOS 6.x ?
+# - CentOS 7.x
+# - CentOS 8.x
+# - RHEL 7.x
+# - RHEL 8.x
+# - Debian
+# - Windows
+---
+- name: Deploy Tanium agent on unmanaged endpoints
+  hosts: all
+  gather_facts: true
+  gather_subset:
+    - min
+  vars_files:
+    - deploy_config.yml
+
+  tasks:
+    - name: Set value of OS family for Linux endpoints
+      set_fact:
+        os_family: "Linux"
+      when:
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
+
+    - name: Set value of OS family for Windows endpoints
+      set_fact:
+        os_family: "Windows"
+      when:
+        - "ansible_facts.os_family == 'Windows'"
+
+    - name: Set value of OS family for MacOS endpoints
+      set_fact:
+        os_family: "MacOSX"
+      when:
+        - "ansible_facts.distribution == 'MacOSX'"
+  
+    - name: Set value for temporary folder (Linux/Mac)
+      set_fact:
+        dst_temp_directory: "{{ dst_linux_temp_directory }}"
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+
+    - name: Set value for temporary folder (Windows)
+      set_fact:
+        dst_temp_directory: "{{ dst_win_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Set value for install package (Linux)
+      set_fact:
+        tanium_install_package: "{{ tanium_linux_package }}"
+      when:
+        - "os_family == 'Linux'"
+
+    - name: Set value for install package (Windows)
+      set_fact:
+        tanium_install_package: "{{ tanium_win_package }}"
+      when:
+        - "os_family == 'Windows'"
+        
+    - name: Set value for install package (MacOS)
+      set_fact:
+        tanium_install_package: "{{ tanium_mac_package }}"
+      when:
+        - "os_family == 'MacOSX'"
+
+    - name: Create endpoint temporary directory (Linux/Mac)
+      ansible.builtin.file:
+        path: "{{ dst_temp_directory }}"
+        state: directory
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+        
+    - name: Create endpoint temporary directory (Windows)
+      ansible.windows.win_file:
+        path: "{{ dst_temp_directory }}"
+        state: directory
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Copy and unzip Tanium Client rpm to endpoint (Linux/Mac)
+      ansible.builtin.unarchive:
+        src: "./{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+        
+    - name: Copy Tanium Client to endpoint (Windows)
+      ansible.windows.win_copy:
+        src: "./{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
+    - name: Unzip Tanium Client on endpoint (Windows)
+      community.windows.win_unzip:
+        src: "{{ dst_temp_directory }}\\{{ tanium_install_package }}"
+        dest: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
+    # This step is not required if using TaaS, as install.sh is already part of the .zip file
+    - name: Copy install script to endpoint (Linux)
+      ansible.builtin.copy:
+        src: "./install_scripts/install.sh"
+        dest: "{{ dst_temp_directory }}/install.sh"
+      when:
+        - "is_taas == false"
+        - "os_family == 'Linux'"
+
+    # This step is not required if using TaaS, as install.sh is already part of the .zip file
+    - name: Copy install script to endpoint (Mac)
+      ansible.builtin.copy:
+        src: "./install_scripts/mac_install.sh"
+        dest: "{{ dst_temp_directory }}/install.sh"
+      when:
+        - "is_taas == false"
+        - "os_family == 'MacOSX'"
+
+    # This step is not required if using TaaS, as install.bat is already part of the .zip file
+    - name: Copy install script to endpoing (Windows)
+      ansible.builtin.copy:
+        src: "./install_scripts/install.bat"
+        dest: "{{ dst_temp_directory }}/install.bat"
+      when:
+        - "is_taas == false"
+        - "os_family == 'Windows'"
+
+    - name: Change mode of install.sh file (Linux/Mac)
+      ansible.builtin.file:
+        path: "{{ dst_temp_directory }}/install.sh"
+        mode: 0744
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+
+
+
+
+
+
+
+    - name: Collects facts about system services (CentOS 7.x and 8.x)
+      service_facts:
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+
+    - name: Print Maybe
+      debug:
+        msg: "yes"
+      when:
+        ansible_facts.services['firewalld.service'].state == 'running'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    - name: Permit inbound traffic in default zone for CentOS 5.x and 6.x
+      ansible.builtin.iptables:
+        chain: INPUT
+        destination_port: "{{ item }}"
+        jump: ACCEPT
+        protocol: tcp
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
+
+    - name: Permit inbound and outbound traffic in default zone for CentOS 7.x and 8.x
+      ansible.posix.firewalld:
+        port: "{{ item }}/tcp"
+        permanent: yes
+        state: enabled
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+        - "ansible_facts.services['firewalld.service'].state == 'running'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
+        - "{{ firewall_ports_outbound }}"
+
+    - name: Permit inbound traffic for Windows
+      community.windows.win_firewall_rule:
+        name: "Allow incoming traffic on port {{ item }}"
+        localport: "{{ item }}"
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "os_family == 'Windows'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
+
+    - name: Permit outbound traffic in default zone for CentOS 5.x and 6.x
+      ansible.builtin.iptables:
+        chain: OUTPUT
+        destination_port: "{{ item }}"
+        jump: ACCEPT
+        protocol: tcp
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
+
+    - name: Permit outbound traffic for Windows
+      community.windows.win_firewall_rule:
+        name: "Allow outgoing traffic on port {{ item }}"
+        localport: "{{ item }}"
+        action: allow
+        direction: out
+        protocol: tcp
+        state: present
+        enabled: yes
+      when:
+        - "os_family == 'Windows'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
+
+    - name: Reload firewalld service for Linux endpoints (CentOS 7.x and 8.x)
+      systemd:
+        name: firewalld
+        state: reloaded
+      when:
+        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+        - "ansible_facts.services['firewalld.service'].state == 'running'"
+
+    - name: Execute install.sh shell (Linux/Mac)
+      ansible.builtin.shell: "{{ dst_temp_directory }}/install.sh"
+      become: true
+      args:
+        chdir: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Linux' or os_family == 'MacOSX'"
+
+    - name: Execute install.bat shell (Windows)
+      win_shell: "{{ dst_temp_directory }}\\install.bat"
+      args:
+        chdir: "{{ dst_temp_directory }}"
+      when:
+        - "os_family == 'Windows'"
+
