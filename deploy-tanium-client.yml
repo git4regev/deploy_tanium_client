@@ -148,6 +148,7 @@
         destination_port: "{{ item }}"
         jump: ACCEPT
         protocol: tcp
+      become: yes
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
@@ -159,6 +160,7 @@
         port: "{{ item }}/tcp"
         permanent: yes
         state: enabled
+      become: yes
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
@@ -188,6 +190,7 @@
         destination_port: "{{ item }}"
         jump: ACCEPT
         protocol: tcp
+      become: yes
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
@@ -212,6 +215,7 @@
       systemd:
         name: firewalld
         state: reloaded
+      become: yes
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
