@@ -135,57 +135,34 @@
       when:
         - "os_family == 'Linux' or os_family == 'MacOSX'"
 
-
-
-
-
-
-
-    - name: Collects facts about system services (CentOS 7.x and 8.x)
+    # Trying to see if firewall service is enabled on endpoint
+    - name: Collects facts about system services (CentOS/RHEL 7.x and 8.x)
       service_facts:
       when:
-        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
 
-    - name: Print Maybe
-      debug:
-        msg: "yes"
-      when:
-        ansible_facts.services['firewalld.service'].state == 'running'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    - name: Permit inbound traffic in default zone for CentOS 5.x and 6.x
+    - name: Permit inbound traffic in default zone for CentOS/RHEL 5.x and 6.x
       ansible.builtin.iptables:
         chain: INPUT
         destination_port: "{{ item }}"
         jump: ACCEPT
         protocol: tcp
       when:
-        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
       with_items:
         - "{{ firewall_ports_inbound }}"
 
-    - name: Permit inbound and outbound traffic in default zone for CentOS 7.x and 8.x
+    - name: Permit inbound and outbound traffic in default zone for CentOS/RHEL 7.x and 8.x
       ansible.posix.firewalld:
         port: "{{ item }}/tcp"
         permanent: yes
         state: enabled
       when:
-        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+        - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
       with_items:
         - "{{ firewall_ports_inbound }}"
@@ -205,14 +182,14 @@
       with_items:
         - "{{ firewall_ports_inbound }}"
 
-    - name: Permit outbound traffic in default zone for CentOS 5.x and 6.x
+    - name: Permit outbound traffic in default zone for CentOS/RHEL 5.x and 6.x
       ansible.builtin.iptables:
         chain: OUTPUT
         destination_port: "{{ item }}"
         jump: ACCEPT
         protocol: tcp
       when:
-        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
       with_items:
         - "{{ firewall_ports_inbound }}"
@@ -231,13 +208,14 @@
       with_items:
         - "{{ firewall_ports_inbound }}"
 
-    - name: Reload firewalld service for Linux endpoints (CentOS 7.x and 8.x)
+    - name: Reload firewalld service for Linux endpoints (CentOS/RHEL 7.x and 8.x)
       systemd:
         name: firewalld
         state: reloaded
       when:
-        - "ansible_facts.distribution == 'CentOS'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+        - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
 
     - name: Execute install.sh shell (Linux/Mac)
