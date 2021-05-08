@@ -10,7 +10,7 @@
 import argparse
 import paramiko
 import os.path
-import os.chmod
+import os
 import csv
 
 ansible_file = 'ansible_hosts'
@@ -28,6 +28,7 @@ if not os.path.isfile(known_hosts):
 # https://gist.github.com/batok/2352501
 # https://29a.ch/2010/9/8/deploy-ssh-public-key-multiple-servers-python-paramiko
 with open(ansible_file) as csv_file:
+    print ("Reading content of {}...".format(ansible_file))
     csv_reader = csv.reader(csv_file, delimiter=' ')
     for row in csv_reader:
         try:
@@ -40,6 +41,7 @@ with open(ansible_file) as csv_file:
                         if "ansible_user" in item:
                             host_username = (item.split("="))[1]
                     # Adding the fingerprint from a remote server to a local machine
+                    print ("Adding fingerpring for host {} to Ansible host...".format(host))
                     address = host+':22'
                     transport = paramiko.Transport(host,'22')
                     transport.connect()
@@ -50,6 +52,7 @@ with open(ansible_file) as csv_file:
                     hostfile.save(filename=known_hosts)
                     # Add public key of local host to remote server
                     if (host_username != ""):
+                        print ("Adding Ansible public key to remote host {}...".format(host))
                         remote_server_key_file = os.path.dirname(os.path.realpath(__file__)) + "/" + hosts_keys_folder + "/" + host + ".pem"
                         os.chmod(remote_server_key_file, 0o600)
                         remote_server_key = paramiko.RSAKey.from_private_key_file(remote_server_key_file)
