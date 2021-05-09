@@ -134,11 +134,10 @@
         - "os_family == 'Linux' or os_family == 'MacOSX'"
 
     # Trying to see if firewall service is enabled on endpoint
-    - name: Collects facts about system services (CentOS/RHEL 7.x and 8.x)
+    - name: Collects facts about system services (CentOS/RHEL 7.x and 8.x, and Debian 10.x)
       service_facts:
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
-        - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
+        - "((ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat') and (ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8')) or (ansible_facts.distribution == 'Debian' and ansible_facts.distribution_major_version == '10')"
 
     - name: Permit inbound traffic in default zone for CentOS/RHEL 5.x and 6.x
       ansible.builtin.iptables:
@@ -160,13 +159,28 @@
         state: enabled
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
         - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
       with_items:
         - "{{ firewall_ports_inbound }}"
         - "{{ firewall_ports_outbound }}"
+
+    - name: Permit inbound traffic for Debian 10.x
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        direction: in
+      become: yes
+      when:
+        - "ansible_facts.distribution == 'Debian'"
+        - "ansible_facts.distribution_major_version == '10'"
+        - "'ufw.service' in ansible_facts.services"
+        - "ansible_facts.services['ufw.service'].status == 'enabled'"
+      with_items:
+        - "{{ firewall_ports_inbound }}"
 
     - name: Permit inbound traffic for Windows
       community.windows.win_firewall_rule:
@@ -190,10 +204,25 @@
         protocol: tcp
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
       with_items:
-        - "{{ firewall_ports_inbound }}"
+        - "{{ firewall_ports_outbound }}"
+
+    - name: Permit outbound traffic for Debian 10.x
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        direction: out
+      become: yes
+      when:
+        - "ansible_facts.distribution == 'Debian'"
+        - "ansible_facts.distribution_major_version == '10'"
+        - "'ufw.service' in ansible_facts.services"
+        - "ansible_facts.services['ufw.service'].status == 'enabled'"
+      with_items:
+        - "{{ firewall_ports_outbound }}"
 
     - name: Permit outbound traffic for Windows
       community.windows.win_firewall_rule:
@@ -207,7 +236,7 @@
       when:
         - "os_family == 'Windows'"
       with_items:
-        - "{{ firewall_ports_inbound }}"
+        - "{{ firewall_ports_outbound }}"
 
     - name: Reload firewalld service for Linux endpoints (CentOS/RHEL 7.x and 8.x)
       systemd:
@@ -215,7 +244,7 @@
         state: reloaded
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8'"
         - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
