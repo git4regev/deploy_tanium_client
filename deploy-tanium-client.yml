@@ -3,7 +3,7 @@
 # - CentOS/RHEL 5.x/6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM
 # - CentOS/RHEL 7.x/8.x using firewalld for firewall functionlity
 # - Debian 9.x/10.x using UFW for firewall functionality
-# - Ubuntu 16.x/18.x using UFW for firewall functionality
+# - Ubuntu 14.x/16.x/18.x using UFW for firewall functionality
 # - Windows
 ---
 - name: Deploy Tanium agent on unmanaged endpoints
@@ -176,7 +176,7 @@
         - "{{ firewall_ports_inbound }}"
         - "{{ firewall_ports_outbound }}"
 
-    - name: Permit inbound traffic for Debian 9.x/10.x, and Ubuntu 16.x/18.x
+    - name: Permit inbound traffic for Debian 9.x/10.x, and Ubuntu 14.x/16.x/18.x
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -184,7 +184,7 @@
         direction: in
       become: yes
       when:
-        - "(ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10')) or (ansible_facts.distribution == 'Ubuntu' and (ansible_facts.distribution_major_version == '16' or ansible_facts.distribution_major_version == '18'))"
+        - "(ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10')) or (ansible_facts.distribution == 'Ubuntu' and (ansible_facts.distribution_major_version == '14' or ansible_facts.distribution_major_version == '16' or ansible_facts.distribution_major_version == '18'))"
         - "'ufw.service' in ansible_facts.services"
         - "ansible_facts.services['ufw.service'].status == 'enabled'"
       with_items:
@@ -217,7 +217,7 @@
       with_items:
         - "{{ firewall_ports_outbound }}"
 
-    - name: Permit outbound traffic for Debian 9.x/10.x, and Ubuntu 16.x/18.x
+    - name: Permit outbound traffic for Debian 9.x/10.x, and Ubuntu 14.x/16.x/18.x
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -225,7 +225,7 @@
         direction: out
       become: yes
       when:
-        - "(ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10')) or (ansible_facts.distribution == 'Ubuntu' and (ansible_facts.distribution_major_version == '16' or ansible_facts.distribution_major_version == '18'))"
+        - "(ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10')) or (ansible_facts.distribution == 'Ubuntu' and (ansible_facts.distribution_major_version == '14' or ansible_facts.distribution_major_version == '16' or ansible_facts.distribution_major_version == '18'))"
         - "'ufw.service' in ansible_facts.services"
         - "ansible_facts.services['ufw.service'].status == 'enabled'"
       with_items:
