@@ -51,8 +51,8 @@ with open(ansible_file) as csv_file:
                     if "ansible_user" in item:
                         host_username = (item.split("="))[1]
                         print ("\t- Found username {}.".format(host_username))
-                    else:
-                        print ("\t\t- WARNING: no username defined in Ansible hosts file for host {}.".format(host))
+                if (host_username == ""):
+                    print ("\t\t- WARNING: no username defined in Ansible hosts file for host {}.".format(host))
                 # Adding the fingerprint from a remote server to a local machine
                 print ("\t- Getting public key from host {}...".format(host))
                 address = host+':22'
@@ -88,7 +88,7 @@ with open(ansible_file) as csv_file:
                             except:
                                 print ("\t- ERROR: Could not add local host public key to remote host.")
                             else:
-                                print ("\t- SUCCESS. SSH authentication configuration for host {} is complete.".format(host)))
+                                print ("\t- SUCCESS. SSH authentication configuration for host {} is complete.".format(host))
             elif host[0]=='[':
                 if host=='[windows_endpoints]':
                     ignore_line = True
