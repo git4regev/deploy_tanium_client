@@ -4,7 +4,7 @@
 # - CentOS/RHEL/OEL 7.x/8.x using firewalld for firewall functionlity
 # - Debian 9.x/10.x using UFW for firewall functionality
 # - Ubuntu 14.x/16.x/18.x using UFW for firewall functionality
-# - SLES 15.x using firewalld for firewall functionlity
+# - SLES/openSUSE 15.x using firewalld for firewall functionlity
 # - Windows
 ---
 - name: Deploy Tanium agent on unmanaged endpoints
@@ -20,7 +20,7 @@
       set_fact:
         os_family: "Linux"
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian' or ansible_facts.distribution == 'Ubuntu' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian' or ansible_facts.distribution == 'Ubuntu' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES' or ('openSUSE' in ansible_facts.distribution)"
 
     - name: Set value of OS family for Windows endpoints
       set_fact:
@@ -144,10 +144,10 @@
         - "os_family == 'Linux' or os_family == 'MacOSX'"
 
     # Trying to see if firewall service is enabled on endpoint
-    - name: Collects facts about system services (CentOS/RHEL/OEL, Debian, SLES, and Ubuntu)
+    - name: Collects facts about system services (Linux)
       service_facts:
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian' or ansible_facts.distribution == 'Ubuntu' or ansible_facts.distribution == 'OracleLinux'"
+        - "os_family == 'Linux'"
 
     - name: Permit inbound traffic in default zone for CentOS/RHEL/OEL 6.x
       ansible.builtin.iptables:
@@ -162,14 +162,14 @@
       with_items:
         - "{{ firewall_ports_inbound }}"
 
-    - name: Permit inbound and outbound traffic in default zone for CentOS/RHEL/OEL 7.x and 8.x, and SLES 15.x
+    - name: Permit inbound and outbound traffic in default zone for CentOS/RHEL/OEL 7.x and 8.x, and SLES/openSUSE 15.x
       ansible.posix.firewalld:
         port: "{{ item }}/tcp"
         permanent: yes
         state: enabled
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES' or ('openSUSE' in ansible_facts.distribution)"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8' or ansible_facts.distribution_major_version == '15'"
         - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
@@ -266,13 +266,13 @@
         - "'iptables' in ansible_facts.services"
         - "ansible_facts.services['iptables'].status == 'enabled'"
 
-    - name: Reload firewalld service for Linux endpoints (CentOS/RHEL/OEL 7.x and 8.x, and SLES 15.x)
+    - name: Reload firewalld service for Linux endpoints (CentOS/RHEL/OEL 7.x and 8.x, and SLES/openSUSE 15.x)
       systemd:
         name: firewalld
         state: reloaded
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux' or ansible_facts.distribution == 'SLES' or ('openSUSE' in ansible_facts.distribution)"
         - "ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8' or ansible_facts.distribution_major_version == '15'"
         - "'firewalld.service' in ansible_facts.services"
         - "ansible_facts.services['firewalld.service'].state == 'running'"
