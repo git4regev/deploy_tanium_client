@@ -1,12 +1,10 @@
 # This Ansible playbook deploys the Tanium client on Windwos, Linux, and Mac endpoints
 # The following distributions are supported by this playbook:
-# - CentOS 5.x ?
-# - CentOS 6.x ?
-# - CentOS 7.x
-# - CentOS 8.x
-# - RHEL 7.x
-# - RHEL 8.x
-# - Debian
+# - CentOS/RHEL 5.x using iptables for firewall functionality (?)
+# - CentOS/RHEL 6.x using iptables for firewall functionality (?)
+# - CentOS/RHEL 7.x using firewalld for firewall functionlity
+# - CentOS/RHEL 8.x using firewalld for firewall functionlity
+# - Debian 10.x using UFW for firewall functionality
 # - Windows
 ---
 - name: Deploy Tanium agent on unmanaged endpoints
