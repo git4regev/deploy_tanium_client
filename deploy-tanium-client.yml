@@ -4,6 +4,7 @@
 # - CentOS/RHEL 6.x using iptables for firewall functionality (?)
 # - CentOS/RHEL 7.x using firewalld for firewall functionlity
 # - CentOS/RHEL 8.x using firewalld for firewall functionlity
+# - Debian 9.x using UFW for firewall functionality
 # - Debian 10.x using UFW for firewall functionality
 # - Windows
 ---
@@ -137,7 +138,7 @@
     - name: Collects facts about system services (CentOS/RHEL 7.x and 8.x, and Debian 10.x)
       service_facts:
       when:
-        - "((ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat') and (ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8')) or (ansible_facts.distribution == 'Debian' and ansible_facts.distribution_major_version == '10')"
+        - "((ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat') and (ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8')) or (ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10'))"
 
     - name: Permit inbound traffic in default zone for CentOS/RHEL 5.x and 6.x
       ansible.builtin.iptables:
@@ -167,7 +168,7 @@
         - "{{ firewall_ports_inbound }}"
         - "{{ firewall_ports_outbound }}"
 
-    - name: Permit inbound traffic for Debian 10.x
+    - name: Permit inbound traffic for Debian 9.x and 10.x
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -176,7 +177,7 @@
       become: yes
       when:
         - "ansible_facts.distribution == 'Debian'"
-        - "ansible_facts.distribution_major_version == '10'"
+        - "ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10'"
         - "'ufw.service' in ansible_facts.services"
         - "ansible_facts.services['ufw.service'].status == 'enabled'"
       with_items:
@@ -209,7 +210,7 @@
       with_items:
         - "{{ firewall_ports_outbound }}"
 
-    - name: Permit outbound traffic for Debian 10.x
+    - name: Permit outbound traffic for Debian 9.x and 10.x
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -218,7 +219,7 @@
       become: yes
       when:
         - "ansible_facts.distribution == 'Debian'"
-        - "ansible_facts.distribution_major_version == '10'"
+        - "ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10'"
         - "'ufw.service' in ansible_facts.services"
         - "ansible_facts.services['ufw.service'].status == 'enabled'"
       with_items:
