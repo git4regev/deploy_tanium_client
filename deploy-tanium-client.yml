@@ -1,10 +1,11 @@
 # This Ansible playbook deploys the Tanium client on Windwos, Linux, and Mac endpoints
-# The following distributions are supported by this playbook:
-# - CentOS/RHEL/OEL 6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM
+# The following distributions have been tested with this playbook:
+# - CentOS/RHEL/OEL 6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM on endpoint
 # - CentOS/RHEL/OEL 7.x/8.x using firewalld for firewall functionlity
 # - Debian 9.x/10.x using UFW for firewall functionality
 # - Ubuntu 14.x/16.x/18.x using UFW for firewall functionality
-# - SLES/openSUSE 15.x using firewalld for firewall functionlity
+# - SLES/openSUSE 15.x using firewalld for firewall functionality
+# - SLES/openSUSE 12.x with no support for firewall functionality
 # - Windows
 ---
 - name: Deploy Tanium agent on unmanaged endpoints
