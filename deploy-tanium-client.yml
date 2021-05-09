@@ -1,6 +1,6 @@
 # This Ansible playbook deploys the Tanium client on Windwos, Linux, and Mac endpoints
 # The following distributions are supported by this playbook:
-# - CentOS/RHEL/OEL 5.x/6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM on RHEL/CentOS 6.x
+# - CentOS/RHEL/OEL 6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM
 # - CentOS/RHEL/OEL 7.x/8.x using firewalld for firewall functionlity
 # - Debian 9.x/10.x using UFW for firewall functionality
 # - Ubuntu 14.x/16.x/18.x using UFW for firewall functionality
@@ -63,14 +63,14 @@
       when:
         - "os_family == 'MacOSX'"
 
-    - name: Install libselinux-python-2.0.94-7.el6 RPM for x86_64 on CentOS/RHEL 5.x and 6.x
+    - name: Install libselinux-python-2.0.94-7.el6 RPM for x86_64 on CentOS/RHEL 6.x
       yum:
         name: http://ftp.pbone.net/mirror/vault.centos.org/6.8/os/x86_64/Packages/libselinux-python-2.0.94-7.el6.x86_64.rpm
         update_cache: yes
         state: present
       become: yes
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux'"
         - "ansible_facts.distribution_major_version == '6'"
 
     - name: Create endpoint temporary directory (Linux/Mac)
@@ -148,7 +148,7 @@
       when:
         - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian' or ansible_facts.distribution == 'Ubuntu' or ansible_facts.distribution == 'OracleLinux'"
 
-    - name: Permit inbound traffic in default zone for CentOS/RHEL 5.x and 6.x
+    - name: Permit inbound traffic in default zone for CentOS/RHEL/OEL 6.x
       ansible.builtin.iptables:
         chain: INPUT
         destination_port: "{{ item }}"
@@ -204,7 +204,7 @@
       with_items:
         - "{{ firewall_ports_inbound }}"
 
-    - name: Permit outbound traffic in default zone for CentOS/RHEL 5.x and 6.x
+    - name: Permit outbound traffic in default zone for CentOS/RHEL/OEL 6.x
       ansible.builtin.iptables:
         chain: OUTPUT
         destination_port: "{{ item }}"
@@ -244,6 +244,26 @@
         - "os_family == 'Windows'"
       with_items:
         - "{{ firewall_ports_outbound }}"
+
+    - name: Save current state of the firewall in system file for CentOS/RHEL/OEL 6.x
+      community.general.iptables_state:
+        state: saved
+        path: /etc/sysconfig/iptables
+      become: yes
+      when:
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux'"
+        - "ansible_facts.distribution_major_version == '6'"
+        - "'iptables' in ansible_facts.services"
+        - "ansible_facts.services['iptables'].status == 'enabled'"
+
+    - name: restart iptables for CentOS/RHEL/OEL 6.x
+      become: yes
+      service: name=iptables enabled=yes state=restarted
+      when:
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'OracleLinux'"
+        - "ansible_facts.distribution_major_version == '6'"
+        - "'iptables' in ansible_facts.services"
+        - "ansible_facts.services['iptables'].status == 'enabled'"
 
     - name: Reload firewalld service for Linux endpoints (CentOS/RHEL/OEL 7.x and 8.x)
       systemd:
