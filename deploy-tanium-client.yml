@@ -22,7 +22,7 @@
       set_fact:
         os_family: "Linux"
       when:
-        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian'"
 
     - name: Set value of OS family for Windows endpoints
       set_fact:
