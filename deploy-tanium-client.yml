@@ -1,11 +1,8 @@
 # This Ansible playbook deploys the Tanium client on Windwos, Linux, and Mac endpoints
 # The following distributions are supported by this playbook:
-# - CentOS/RHEL 5.x using iptables for firewall functionality (?)
-# - CentOS/RHEL 6.x using iptables for firewall functionality (?)
-# - CentOS/RHEL 7.x using firewalld for firewall functionlity
-# - CentOS/RHEL 8.x using firewalld for firewall functionlity
-# - Debian 9.x using UFW for firewall functionality
-# - Debian 10.x using UFW for firewall functionality
+# - CentOS/RHEL 5.x/6.x using iptables for firewall functionality - playbook will install libselinux-python-2.0.94-7.el6 RPM
+# - CentOS/RHEL 7.x/8.x using firewalld for firewall functionlity
+# - Debian 9.x/10.x using UFW for firewall functionality
 # - Windows
 ---
 - name: Deploy Tanium agent on unmanaged endpoints
@@ -64,6 +61,16 @@
         tanium_install_package: "{{ tanium_mac_package }}"
       when:
         - "os_family == 'MacOSX'"
+
+    - name: Install libselinux-python-2.0.94-7.el6 RPM for x86_64 on CentOS/RHEL 5.x and 6.x
+      yum:
+        name: http://ftp.pbone.net/mirror/vault.centos.org/6.8/os/x86_64/Packages/libselinux-python-2.0.94-7.el6.x86_64.rpm
+        update_cache: yes
+        state: present
+      become: yes
+      when:
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat'"
+        - "ansible_facts.distribution_major_version == '5' or ansible_facts.distribution_major_version == '6'"
 
     - name: Create endpoint temporary directory (Linux/Mac)
       ansible.builtin.file:
@@ -138,7 +145,7 @@
     - name: Collects facts about system services (CentOS/RHEL 7.x and 8.x, and Debian 10.x)
       service_facts:
       when:
-        - "((ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat') and (ansible_facts.distribution_major_version == '7' or ansible_facts.distribution_major_version == '8')) or (ansible_facts.distribution == 'Debian' and (ansible_facts.distribution_major_version == '9' or ansible_facts.distribution_major_version == '10'))"
+        - "ansible_facts.distribution == 'CentOS' or ansible_facts.distribution == 'RedHat' or ansible_facts.distribution == 'Debian'"
 
     - name: Permit inbound traffic in default zone for CentOS/RHEL 5.x and 6.x
       ansible.builtin.iptables:
