@@ -62,7 +62,7 @@ with open(ansible_file) as csv_file:
                     key = transport.get_remote_server_key()
                     transport.close()
                 except:
-                    print ("\t- ERROR: Could not retrieve public key from host.")
+                    print ("\t- ERROR: Could not retrieve public key from remote host.")
                 else:
                     try:
                         print ("\t- Storing public key on local host...")
@@ -77,15 +77,28 @@ with open(ansible_file) as csv_file:
                             print ("\t- Adding localhost public key to remote host {}...".format(host))
                             try:
                                 remote_server_key_file = os.path.dirname(os.path.realpath(__file__)) + "/" + hosts_keys_folder + "/" + host + ".pem"
-                                os.chmod(remote_server_key_file, 0o600)
-                                remote_server_key = paramiko.RSAKey.from_private_key_file(remote_server_key_file)
-                                client = paramiko.SSHClient()
-                                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                                #client.connect(server, username=username, password=password)
-                                client.connect( hostname = host, username = host_username, pkey = remote_server_key )
-                                client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % ansible_key)
-                                client.close()
-                            except:
+                                remote_server_password_file = os.path.dirname(os.path.realpath(__file__)) + "/" + hosts_keys_folder + "/" + host + ".txt"
+                                if os.path.isfile(remote_server_key_file):
+                                    print ("\t- Found .pem file for remote host. Using SSH key pair for authentication...")
+                                    os.chmod(remote_server_key_file, 0o600)
+                                    remote_server_key = paramiko.RSAKey.from_private_key_file(remote_server_key_file)
+                                    client = paramiko.SSHClient()
+                                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                                    #client.connect(server, username=username, password=password)
+                                    client.connect( hostname = host, username = host_username, pkey = remote_server_key )
+                                    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % ansible_key)
+                                    client.close()
+                                elif os.path.isfile(remote_server_password_file):
+                                    print ("\t- Found .txt file for remote host. Using username/password for authentication...")
+                                    with open(remote_server_password_file) as f:
+                                        host_password = (f.read()).rstrip()
+                                    f.close()
+                                    client = paramiko.SSHClient()
+                                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                                    client.connect(host, username=host_username, password=host_password)
+                                    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % ansible_key)
+                                    client.close()                                
+                            except Exception as e:
                                 print ("\t- ERROR: Could not add local host public key to remote host.")
                             else:
                                 print ("\t- SUCCESS. SSH authentication configuration for host {} is complete.".format(host))
