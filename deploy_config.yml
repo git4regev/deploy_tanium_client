@@ -8,9 +8,12 @@ tanium_mac_package: mac-client-bundle.zip      # Name of Mac install package
 is_taas: true                                  # Is this TaaS or on-prem. Mostly used for TSE testing purposes
 
 firewall_ports_inbound:                        # Allow inbound client traffic
-  - 17472
+  - 17472                                      # --> Tanium Core service (required for: all Tanium services)
+  
 firewall_ports_outbound:                       # Allow outbound client traffic
-  - 17472
-  - 17486
-
-
+  - 17472                                      # --> Tanium Core service (required for: all Tanium services)
+  - 17486                                      # --> Tanium Core service (required for: TaaS service)
+  - 17475                                      # --> Direct Connect (required for: Threat Response)
+  - 443                                        # --> Threat Response data collection - S3 (required for: Threat Response)
+  - 22                                         # --> Threat Response data collection - SFTP/SCP (required for: Threat Response)
+  - 445                                        # --> Threat Response data collection - SMB (required for: Threat Response)
