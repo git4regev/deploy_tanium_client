@@ -5,7 +5,7 @@ tanium_linux_package: linux-client-bundle.zip  # Name of Linux install package
 tanium_win_package: win-client-bundle.zip      # Name of Windows install package
 tanium_mac_package: mac-client-bundle.zip      # Name of Mac install package
 
-is_taas: false                                 # Is this TaaS or on-prem. Mostly used for TSE testing purposes
+is_taas: true                                  # Is this TaaS or on-prem. Mostly used for TSE testing purposes
 
 firewall_ports_inbound:                        # Allow inbound client traffic
   - 17472
