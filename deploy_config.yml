@@ -9,6 +9,7 @@ is_taas: true                                  # Is this TaaS or on-prem. Mostly
 
 firewall_ports_inbound:                        # Allow inbound client traffic
   - 17472                                      # --> Tanium Core service (required for: all Tanium services)
+  - 17473                                      # --> Tanium Client Container service (required for: Tanium Core Containers)
   
 firewall_ports_outbound:                       # Allow outbound client traffic
   - 17472                                      # --> Tanium Core service (required for: all Tanium services)
